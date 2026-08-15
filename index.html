@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="SinMarca: pega el link de un video de TikTok y descárgalo sin marca de agua, en segundos.">
+<title>SinMarca — Descarga TikTok sin marca de agua</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --bg:#000000;
+    --cyan:#25F4EE;
+    --pink:#FE2C55;
+    --white:#FFFFFF;
+    --gray:#8a8a8a;
+    --card:#0d0d0d;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  body{
+    background:var(--bg);
+    color:var(--white);
+    font-family:'Poppins',sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(37,244,238,0.10), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(254,44,85,0.10), transparent 45%);
+    pointer-events:none;
+  }
+
+  .wrap{
+    width:100%;
+    max-width:460px;
+    position:relative;
+    z-index:1;
+  }
+
+  .eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.2em;
+    color:var(--gray);
+    text-transform:uppercase;
+    margin-bottom:14px;
+    text-align:center;
+  }
+
+  h1{
+    text-align:center;
+    font-size:52px;
+    font-weight:900;
+    letter-spacing:-0.02em;
+    position:relative;
+    color:var(--white);
+    margin-bottom:8px;
+    user-select:none;
+  }
+
+  h1 .glitch{ position:relative; display:inline-block; }
+  h1 .glitch::before, h1 .glitch::after{
+    content:"SinMarca";
+    position:absolute;
+    top:0; left:0; width:100%;
+  }
+  h1 .glitch::before{ color:var(--cyan); transform:translate(-3px,2px); z-index:-1; }
+  h1 .glitch::after{ color:var(--pink); transform:translate(3px,-2px); z-index:-1; }
+
+  .tagline{
+    text-align:center;
+    color:var(--gray);
+    font-size:14.5px;
+    margin-bottom:36px;
+    line-height:1.5;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid #1f1f1f;
+    border-radius:18px;
+    padding:22px;
+  }
+
+  .input-row{ display:flex; gap:8px; }
+
+  input[type="text"]{
+    flex:1;
+    background:#161616;
+    border:1px solid #2a2a2a;
+    border-radius:12px;
+    padding:14px 16px;
+    color:var(--white);
+    font-family:'Space Mono',monospace;
+    font-size:13.5px;
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  input[type="text"]::placeholder{ color:#5a5a5a; }
+  input[type="text"]:focus{ border-color:var(--cyan); }
+  input[type="text"]:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+
+  button{
+    border:none;
+    border-radius:12px;
+    padding:0 22px;
+    font-family:'Poppins',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:#000;
+    cursor:pointer;
+    background:linear-gradient(90deg,var(--cyan),var(--pink));
+    transition:transform .12s ease, opacity .12s ease;
+    white-space:nowrap;
+  }
+  button:hover{ transform:translateY(-1px); }
+  button:active{ transform:translateY(0); }
+  button:disabled{ opacity:.55; cursor:progress; transform:none; }
+  button:focus-visible{ outline:2px solid var(--white); outline-offset:2px; }
+
+  .status{
+    margin-top:16px;
+    font-family:'Space Mono',monospace;
+    font-size:12.5px;
+    min-height:18px;
+    text-align:center;
+  }
+  .status.ok{ color:var(--cyan); }
+  .status.err{ color:var(--pink); }
+  .status.loading{ color:var(--gray); }
+
+  .preview{ margin-top:18px; display:none; }
+  .preview.show{ display:block; }
+  .preview video{ width:100%; border-radius:12px; display:block; background:#000; }
+  .meta{ margin-top:10px; font-size:13px; color:#bdbdbd; line-height:1.5; }
+  .meta strong{ color:var(--white); }
+
+  .dl-btn{
+    display:block;
+    width:100%;
+    margin-top:14px;
+    text-align:center;
+    padding:13px;
+    border-radius:12px;
+    background:var(--white);
+    color:#000;
+    font-weight:800;
+    text-decoration:none;
+    font-size:14px;
+    border:none;
+    cursor:pointer;
+    font-family:'Poppins',sans-serif;
+  }
+  .dl-btn:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+
+  footer{
+    text-align:center;
+    margin-top:22px;
+    color:#4a4a4a;
+    font-size:11.5px;
+    font-family:'Space Mono',monospace;
+    letter-spacing:0.03em;
+  }
+
+  @media (min-width:900px){
+    .wrap{
+      max-width:920px;
+      display:grid;
+      grid-template-columns:1fr 1.1fr;
+      align-items:center;
+      column-gap:56px;
+      text-align:left;
+    }
+    .brand-col{ text-align:left; }
+    .eyebrow{ text-align:left; }
+    h1{ text-align:left; font-size:64px; }
+    .tagline{ text-align:left; max-width:360px; margin-bottom:0; }
+    footer{ text-align:left; margin-top:28px; }
+    .card{ padding:28px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    * { transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="brand-col">
+    <div class="eyebrow">pega el link · recibe el video</div>
+    <h1><span class="glitch">SinMarca</span></h1>
+    <p class="tagline">Pega el enlace de un video de TikTok y descárgalo sin la marca de agua.</p>
+    <footer>SIN MARCA · SIN LOGO · SOLO EL VIDEO</footer>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="input-row">
+        <input type="text" id="tiktokUrl" placeholder="https://www.tiktok.com/@usuario/video/..." autocomplete="off" inputmode="url">
+        <button id="goBtn">Buscar</button>
+      </div>
+      <div class="status" id="status"></div>
+
+      <div class="preview" id="preview">
+        <video id="videoPlayer" controls playsinline></video>
+        <div class="meta" id="meta"></div>
+        <button class="dl-btn" id="downloadBtn" type="button">Descargar sin marca de agua</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // El frontend y el backend viven en el MISMO proyecto de Vercel,
+  // así que basta con la ruta relativa: no hay que escribir ningún dominio.
+  const API_ENDPOINT = '/api/download';
+
+  const input = document.getElementById('tiktokUrl');
+  const goBtn = document.getElementById('goBtn');
+  const status = document.getElementById('status');
+  const preview = document.getElementById('preview');
+  const videoPlayer = document.getElementById('videoPlayer');
+  const meta = document.getElementById('meta');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  function setStatus(msg, type){
+    status.textContent = msg;
+    status.className = 'status' + (type ? ' ' + type : '');
+  }
+
+  async function handleFetch(){
+    const url = input.value.trim();
+    if(!url){
+      setStatus('Pega un link de TikTok primero.', 'err');
+      return;
+    }
+    if(!/tiktok\.com/i.test(url)){
+      setStatus('Ese no parece un link de TikTok.', 'err');
+      return;
+    }
+
+    goBtn.disabled = true;
+    preview.classList.remove('show');
+    setStatus('Buscando el video…', 'loading');
+
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+
+      const json = await res.json();
+
+      if(!res.ok){
+        throw new Error(json.error || 'error-desconocido');
+      }
+
+      const videoUrl = json.videoUrl;
+      if(!videoUrl) throw new Error('no-video-url');
+
+      videoPlayer.src = videoUrl;
+      meta.innerHTML = '<strong>' + (json.title || 'Video de TikTok') + '</strong><br>@' + (json.author || 'autor');
+
+      downloadBtn.textContent = 'Descargar sin marca de agua';
+      downloadBtn.onclick = async () => {
+        downloadBtn.textContent = 'Descargando…';
+        try {
+          const fileRes = await fetch(videoUrl);
+          if(!fileRes.ok) throw new Error('blob-fail');
+          const blob = await fileRes.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = 'sinmarca-' + Date.now() + '.mp4';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(blobUrl);
+        } catch(err){
+          window.open(videoUrl, '_blank');
+        } finally {
+          downloadBtn.textContent = 'Descargar sin marca de agua';
+        }
+      };
+
+      preview.classList.add('show');
+      setStatus('Listo. El video no tiene marca de agua.', 'ok');
+    } catch(err){
+      setStatus('No se pudo procesar ese link. Revisa que sea público y vuelve a intentar.', 'err');
+    } finally {
+      goBtn.disabled = false;
+    }
+  }
+
+  goBtn.addEventListener('click', handleFetch);
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') handleFetch();
+  });
+</script>
+
+</body>
+</html>
